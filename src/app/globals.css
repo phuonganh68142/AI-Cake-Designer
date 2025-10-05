@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+:root {
+  /* Pink Light Theme - FIXED */
+  --background: #fff0f6;
+  --foreground: #2d1b2e;
+  --card-bg: #ffffff;
+  --input-bg: #fef1f7;
+  --text-primary: #2d1b2e;
+  --text-secondary: #6b4c6f;
+  --accent-pink: #ff69b4;
+  --accent-dark: #db4d94;
+  --border-color: #ffc0e0;
+  --shadow: rgba(255, 105, 180, 0.15);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Pink Dark Theme */
+    --background: #1a0f1a;
+    --foreground: #ffd6ed;
+    --card-bg: #3d2540;
+    --input-bg: #2d1b2e;
+    --text-primary: #ffd6ed;
+    --text-secondary: #d4a5d4;
+    --accent-pink: #ff69b4;
+    --accent-dark: #ff85c8;
+    --border-color: #6b4c6f;
+    --shadow: rgba(255, 105, 180, 0.25);
+  }
+}
+
+/* FORCE pink background */
+body {
+  background: linear-gradient(135deg, #fff0f6 0%, #ffe0ef 100%) !important;
+  color: var(--foreground) !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  transition: background 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+html {
+  background: #fff0f6;
+}
+
+/* Container styling */
+.cake-designer-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+/* Input focus effects */
+.input-wrapper input:focus,
+.input-wrapper textarea:focus,
+.input-wrapper select:focus {
+  outline: none;
+  border-color: var(--accent-pink) !important;
+  box-shadow: 0 0 0 3px var(--shadow) !important;
+}
+
+/* Button hover effects */
+.generate-button:hover:not(:disabled) {
+  transform: scale(1.02) !important;
+  box-shadow: 0 6px 20px var(--shadow) !important;
+}
+
+.generate-button:active:not(:disabled) {
+  transform: scale(0.98) !important;
+}
+
+/* Recipe card animations */
+.recipe-card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ffe0ef;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-pink);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dark);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--accent-pink);
+  color: white;
+}
+
+/* Fix cho tất cả input fields */
+input, textarea, select {
+  background: #ffffff !important;
+  border: 2px solid #ffc0e0 !important;
+  color: #2d1b2e !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #a0a0a0 !important;
+}
+
+/* Additional responsive adjustments */
+@media (max-width: 768px) {
+  .cake-designer-container {
+    padding: 24px 16px;
+  }
+  
+  h1 {
+    font-size: 24px !important;
+  }
+}
+
+/* Force dark mode pink theme */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(135deg, #1a0f1a 0%, #2d1b2e 100%) !important;
+  }
+  
+  html {
+    background: #1a0f1a;
+  }
+  
+  input, textarea, select {
+    background: #2d1b2e !important;
+    border: 2px solid #6b4c6f !important;
+    color: #ffd6ed !important;
+  }
+}
