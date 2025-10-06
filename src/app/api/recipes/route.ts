@@ -11,7 +11,7 @@ type BindableProvider = ModelFactory & {
   bind?: (opts: { request: Request }) => BindableProvider
 }
 
-// --- Schema (guarantees valid JSON shape) ---
+// --- Schema for Cake Recipes ---
 const Ingredient = z.object({
   item: z.string(),
   amount: z.string(),
@@ -19,13 +19,13 @@ const Ingredient = z.object({
 
 const Recipe = z.object({
   name: z.string(),
-  alcohol_free: z.boolean(),
-  glass: z.enum(['rocks','highball','coupe','martini','collins','mug','wine']).default('rocks'),
+  dietary_info: z.string().default('Contains gluten, dairy, eggs'),
+  serving_size: z.enum(['6-8 servings', '8-10 servings', '10-12 servings', '12 cupcakes', '24 cupcakes']).default('8-10 servings'),
   ingredients: z.array(Ingredient).default([]),
   steps: z.array(z.string()).default([]),
-  garnish: z.string().default(''),
-  vibe_note: z.string().default(''),
-  estimated_time_min: z.number().int().min(1).max(10).default(3),
+  decoration: z.string().default(''),
+  flavor_note: z.string().default(''),
+  estimated_time_min: z.number().int().min(30).max(180).default(60),
 })
 
 const OutputSchema = z.object({
@@ -44,71 +44,112 @@ export async function POST(req: Request) {
         : maybeBindable
 
     const system = [
-      'You are “AI Bartender,” a concise, safety-conscious mixologist.',
-'Return ONLY valid JSON matching the schema. No markdown, no prose. Return exactly 3 recipes.',
-      'Keep each recipe under ~120 words.',
-      'If BASE=mocktail or user implies no alcohol, set alcohol_free=true and avoid spirits.',
+      'You are "AI Cake Designer," a creative, detail-oriented pastry chef AI.',
+      'Return ONLY valid JSON matching the schema. No markdown, no prose. Return exactly 3 cake recipes.',
+      'Keep each recipe clear and under ~150 words.',
+      'If BASE=cupcake, adjust serving_size to "12 cupcakes" or "24 cupcakes".',
+      'If BASE=cake, use serving sizes like "8-10 servings".',
       'Prefer AVAILABLE_INGREDIENTS when possible.',
-     'Example JSON:',
-  `{
+      'Include baking temperature and time in steps.',
+      'Provide creative decoration suggestions.',
+      'Example JSON:',
+      `{
     "recipes": [
       {
-        "name": "Citrus Breeze",
-        "alcohol_free": true,
-        "glass": "highball",
+        "name": "Classic Vanilla Birthday Cake",
+        "dietary_info": "Contains gluten, dairy, eggs",
+        "serving_size": "8-10 servings",
         "ingredients": [
-          { "item": "lime juice", "amount": "20 ml" },
-          { "item": "ginger syrup", "amount": "10 ml" },
-          { "item": "soda water", "amount": "100 ml" }
+          { "item": "all-purpose flour", "amount": "2 cups" },
+          { "item": "granulated sugar", "amount": "1.5 cups" },
+          { "item": "eggs", "amount": "3 large" },
+          { "item": "butter", "amount": "1/2 cup" },
+          { "item": "milk", "amount": "1 cup" },
+          { "item": "vanilla extract", "amount": "2 tsp" }
         ],
-        "steps": ["Build over ice", "Top with soda", "Stir gently"],
-        "garnish": "mint sprig",
-        "vibe_note": "Light, zesty, and refreshing",
-        "estimated_time_min": 3
+        "steps": [
+          "Preheat oven to 350°F (175°C)",
+          "Cream butter and sugar until fluffy",
+          "Add eggs one at a time, beating well",
+          "Alternate adding flour and milk",
+          "Pour into greased pans",
+          "Bake for 30-35 minutes"
+        ],
+        "decoration": "Vanilla buttercream frosting with rainbow sprinkles",
+        "flavor_note": "Light, fluffy, and perfectly sweet",
+        "estimated_time_min": 60
       }
     ]
   }`,
-].join(' ')
+    ].join(' ')
 
-    const user = `MOOD: ${mood}
-OCCASION: ${occasion || '-'}
+    const user = `OCCASION: ${mood}
+EVENT TYPE: ${occasion || '-'}
 STYLE: ${style || '-'}
-BASE: ${base}
-AVAILABLE_INGREDIENTS: ${ingredientsCSV || '-'}`
+CAKE TYPE: ${base}
+AVAILABLE INGREDIENTS: ${ingredientsCSV || '-'}`
 
-    // Try a couple model IDs in case one isn’t enabled in Echo
+    // Try a couple model IDs in case one isn't enabled in Echo
     const modelIds: ReadonlyArray<string> = ['gpt-4o-mini', 'gpt-4o']
     let lastError: unknown = null
 
     for (const id of modelIds) {
       try {
         const { object } = await generateObject({
-          model: provider(id),              // <- now correctly typed as LanguageModel
+          model: provider(id),
           system,
           prompt: user,
           schema: OutputSchema,
-          temperature: 0.6,
-          maxOutputTokens: 800,
+          temperature: 0.7,
+          maxOutputTokens: 1200,
         })
-        return Response.json(object, { headers: { 'Content-Type': 'application/json' } })
+
+        return Response.json(object, { 
+          headers: { 'Content-Type': 'application/json' } 
+        })
       } catch (e) {
         lastError = e
       }
     }
 
     const detail =
-      lastError instanceof Error ? lastError.message : typeof lastError === 'string' ? lastError : 'Unknown model error'
-    console.error('recipes route model error:', lastError)
+      lastError instanceof Error 
+        ? lastError.message 
+        : typeof lastError === 'string' 
+        ? lastError 
+        : 'Unknown model error'
+    
+    console.error('cake recipes route model error:', lastError)
+    
     return new Response(
-      JSON.stringify({ error: 'Model did not return valid JSON', detail }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: 'Model did not return valid JSON', 
+        detail 
+      }),
+      { 
+        status: 502, 
+        headers: { 'Content-Type': 'application/json' } 
+      }
     )
   } catch (err) {
-    const message = err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error'
-    console.error('recipes route error:', err)
+    const message = 
+      err instanceof Error 
+        ? err.message 
+        : typeof err === 'string' 
+        ? err 
+        : 'Unknown error'
+    
+    console.error('cake recipes route error:', err)
+    
     return new Response(
-      JSON.stringify({ error: 'Bad request or server error', detail: message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: 'Bad request or server error', 
+        detail: message 
+      }),
+      { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      }
     )
   }
 }
